@@ -27,8 +27,19 @@ def eliminar_pelicula(peliculas):
     else:
         print("Nombre no valido")
 
+def mostrar_peliculas(peliculas): 
+    for pelicula in peliculas:
+        print(f"\n{pelicula}")
 
-
+def buscar_pelicula(peliculas):
+    busqueda = input("Escribe una parte del nombre de la pelicula que deseas buscar: ").strip().lower()
+    coincidencias = [pelicula for pelicula in peliculas if busqueda in pelicula.lower()]
+    if coincidencias:
+        print("Películas encontradas:")
+        for pelicula in coincidencias:
+            print(f"- {pelicula}")
+    else:
+        print(f"No se encontraron películas que coincidan con '{busqueda}'")
 
 def main(): 
     peliculas = []
@@ -39,7 +50,13 @@ def main():
             añadir_pelicula(peliculas)
         elif opcion == "2":
             eliminar_pelicula(peliculas)
-
+        elif opcion == "3":
+            mostrar_peliculas(peliculas)
+        elif opcion == "4":
+            buscar_pelicula(peliculas)
+        elif opcion == "5":
+            print("Saliendo del programa...")
+            break
         else: 
             print("Opcion no valida, vuelvelo a intentar")
 
