@@ -12,7 +12,6 @@ empleados_deepcopy = copy.deepcopy(empleados)
 
 empleados[0][1].append("Java")
 
-# Mostramos los resultados
 print("Lista original:", empleados)
 print("Copia superficial:", empleados_copy)
 print("Copia profunda:", empleados_deepcopy)
