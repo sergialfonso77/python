@@ -1,7 +1,7 @@
 
 texto_largo = ["Linea " + str(i+1) for i in range(1000)]
 
-lineas = 1000/25
+num_bloques = 1000/25
 lineas_por_bloque = 25
 contador_global = 0
 contador = 0
@@ -16,4 +16,4 @@ for linea in texto_largo:
         bloques.append(bloque_actual)
         bloque_actual = []
         contador_global += 1
-        print(f"\nBloque {contador_global} de {lineas}")
+        print(f"\nBloque {contador_global} de {num_bloques}")
