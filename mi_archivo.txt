@@ -1,0 +1,3 @@
+Este es un nuevo contenido del archivo después de sobrescribir.
+Agregando una nueva línea al final del archivo.
+Otra línea agregada con modo 'a'.
