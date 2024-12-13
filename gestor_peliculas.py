@@ -1,4 +1,10 @@
-#!/usr/bin/env python3
+from flask import Flask, request, jsonify
+import json
+
+app = Flask(__name__)
+
+peliculas = {}
+
 ROJO = "\033[31m"
 VERDE = "\033[32m"
 AMARILLO = "\033[33m"
@@ -6,103 +12,81 @@ AZUL = "\033[34m"
 CIAN = "\033[36m"
 RESTABLECER = "\033[0m"
 
-def mostrar_menu(): 
-    print(f"\n{AZUL}Gestor de peliculas{RESTABLECER}")
-    print(f"{VERDE}1. Añadir pelicula{RESTABLECER}")
-    print(f"{VERDE}2. Eliminar pelicula{RESTABLECER}")
-    print(f"{VERDE}3. Mostrar todas las peliculas{RESTABLECER}")
-    print(f"{VERDE}4. Buscar pelicula{RESTABLECER}")
-    print(f"{VERDE}5. Modificar presupuesto{RESTABLECER}")
-    print(f"{ROJO}6. Salir{RESTABLECER}")
 
-def añadir_pelicula(peliculas):
-    nombre = input("Escribe el nombre de la pelicula: ").strip()
+@app.route('/peliculas', methods=['GET'])
+def mostrar_peliculas():
+    """Muestra todas las películas en el catálogo."""
+    if peliculas:
+        return jsonify(peliculas)
+    else:
+        return jsonify({"message": "No hay películas en el catálogo."}), 404
+
+
+@app.route('/peliculas', methods=['POST'])
+def añadir_pelicula():
+    """Añade una nueva película al catálogo."""
+    data = request.get_json()
+    nombre = data.get('nombre')
+    director = data.get('director')
+    año = data.get('año')
+    presupuesto = data.get('presupuesto')
+
     if nombre in peliculas:
-        print(f"La película {nombre} ya está en el catálogo.")
-        return
-    director = input("Escribe el nombre del director: ").strip()
-    año = input("Escribe el año de estreno: ").strip()
-    presupuesto = input("Escribe el presupuesto de la película: ").strip()
+        return jsonify({"message": f"La película {nombre} ya está en el catálogo."}), 400
 
     peliculas[nombre] = {
         'director': director,
         'año': año,
         'presupuesto': presupuesto
     }
-    print(f"La película {nombre} ha sido añadida al catálogo.")
+    return jsonify({"message": f"La película {nombre} ha sido añadida al catálogo."}), 201
 
-def eliminar_pelicula(peliculas): 
-    nombre = input("Escribe el nombre de la pelicula que deseas eliminar").strip()
-    if nombre:
-        if nombre in peliculas:
-            peliculas.remove(nombre)
-            print(f"La pelicula {nombre} ha sido eliminada del catalogo")
-        else:
-            print(f"La pelicula {nombre} no existe en el catalogo")
+
+@app.route('/peliculas/<nombre>', methods=['DELETE'])
+def eliminar_pelicula(nombre):
+    """Elimina una película del catálogo."""
+    if nombre in peliculas:
+        del peliculas[nombre]
+        return jsonify({"message": f"La película {nombre} ha sido eliminada del catálogo."}), 200
     else:
-        print("Nombre no valido")
+        return jsonify({"message": f"La película {nombre} no existe en el catálogo."}), 404
 
-def mostrar_peliculas(peliculas):
-    if peliculas:
-        for nombre, metadatos in peliculas.items():
-            print(f"\n{AMARILLO}{nombre}:")
-            print(f"  Director: {metadatos['director']}")
-            print(f"  Año: {metadatos['año']}")
-            print(f"  Presupuesto: {metadatos['presupuesto']}")
-    else:
-        print("No hay películas en el catálogo.")
 
-def buscar_pelicula(peliculas):
-    busqueda = input("Escribe una parte del nombre de la película que deseas buscar: ").strip().lower()
+@app.route('/peliculas/buscar', methods=['GET'])
+def buscar_pelicula():
+    """Busca una película en el catálogo por nombre parcial."""
+    busqueda = request.args.get('nombre', '').lower()
     coincidencias = [nombre for nombre in peliculas if busqueda in nombre.lower()]
+    
     if coincidencias:
-        print("Películas encontradas:")
-        for nombre in coincidencias:
-            print(f"- {nombre}: {peliculas[nombre]}")
+        result = {nombre: peliculas[nombre] for nombre in coincidencias}
+        return jsonify(result), 200
     else:
-        print(f"No se encontraron películas que coincidan con '{busqueda}'.")
+        return jsonify({"message": f"No se encontraron películas que coincidan con '{busqueda}'."}), 404
 
-def modificar_presupuesto(peliculas):
+
+@app.route('/peliculas/presupuesto', methods=['PUT'])
+def modificar_presupuesto():
+    """Modifica el presupuesto de todas las películas en función de un porcentaje."""
     try:
-        porcentaje = float(input("Escribe el porcentaje de incremento o disminucion para el presupuesto: ").strip())
-    except ValueError:
-        print("Por favor, ingresa un valor válido para el porcentaje.")
-        return
+        porcentaje = float(request.json.get('porcentaje'))
+    except (ValueError, TypeError):
+        return jsonify({"message": "Por favor, ingresa un valor válido para el porcentaje."}), 400
 
     for nombre, detalles in peliculas.items():
-        presupuesto_actual = float(detalles["presupuesto"].replace("€", "").replace(",", "").strip())
-        nuevo_presupuesto = presupuesto_actual * (1 + porcentaje / 100)
-        
-        if nuevo_presupuesto <= 0:
-            print(f"El presupuesto de la película {nombre} no puede reducirse a 0 o menos.")
+        try:
+            presupuesto_actual = float(detalles["presupuesto"].replace("€", "").replace(",", "").strip())
+            nuevo_presupuesto = presupuesto_actual * (1 + porcentaje / 100)
+
+            if nuevo_presupuesto <= 0:
+                continue
+
+            detalles["presupuesto"] = f"${nuevo_presupuesto:,.2f}"
+        except ValueError:
             continue
 
-        detalles["presupuesto"] = f"${nuevo_presupuesto:,.2f}"
-    print(f"Los presupuestos han sido modificados en un {porcentaje}%.")
-
-def main(): 
-    peliculas = {}
-    while True: 
-        mostrar_menu()
-        opcion = input("Selecciona una opción: ")
-        if opcion == "1": 
-            añadir_pelicula(peliculas)
-        elif opcion == "2":
-            eliminar_pelicula(peliculas)
-        elif opcion == "3":
-            mostrar_peliculas(peliculas)
-        elif opcion == "4":
-            buscar_pelicula(peliculas)
-        elif opcion == "5":
-            modificar_presupuesto(peliculas)
-        elif opcion == "6":
-            print("Saliendo del programa...")
-            break
-        else: 
-            print("Opcion no valida, vuelvelo a intentar")
+    return jsonify({"message": f"Los presupuestos han sido modificados en un {porcentaje} %."}), 200
 
 
-
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    app.run(debug=True)
