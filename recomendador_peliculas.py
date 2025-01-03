@@ -101,19 +101,14 @@ def interfaz_streamlit(df, cosine_sim):
                 if isinstance(recommendations, str):
                     st.write(recommendations) 
                 else:
-                    # Mostrar las recomendaciones junto con los carteles
                     for title in recommendations:
-                        # Buscar la película en el DataFrame original para obtener sus detalles
                         movie = df[df['Title'] == title].iloc[0]
 
-                        # Obtener el cartel de la película
                         poster_url = obtener_cartel_pelicula(movie['Title'])
                         
-                        # Mostrar los detalles de la película
                         st.write(f"**{movie['Title']}** ({movie['Year']}) - Género: {movie['Genre']} - Calificación: {movie['Rating']}")
                         st.write(f"Sinopsis: {movie['Description'][:200]}...")
 
-                        # Mostrar la imagen del cartel
                         if poster_url:
                             st.image(poster_url, caption=f"Cartel de {movie['Title']}", use_container_width=True)
                         else:
